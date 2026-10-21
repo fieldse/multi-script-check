@@ -56,7 +56,10 @@ python3 run_checks.py -f urls.txt | jq '.[] | select(.result == "TRUE")'
 | `-o, --output`    | also saves the JSON to `<input-stem>.results.json` in the current directory |
 | `-o PATH`         | also saves the JSON to `PATH`                                               |
 
-- **What runs:** `01_robots_check.py`, `02_ping_check.py` and `03_security_txt_check.py`, once per target.
+- **What runs:** the files listed in `CHECK_SCRIPTS` at the top of `run_checks.py`, once per target.
+- **Default list:** `01_robots_check.py`, `02_ping_check.py` and `03_security_txt_check.py`.
+- **Your own script:** put it in `scripts/`, add its file name to `CHECK_SCRIPTS`.
+- **Script contract:** it takes one target as its only argument and prints one JSON row.
 - **How:** each script is a separate subprocess. The runner collects the row each one prints.
 - **Output:** one JSON array on stdout, with one row per check per target.
 - **Order:** input-file order, then `01`, `02`, `03` for each target.

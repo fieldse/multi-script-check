@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Run all three checks against every target in a file and print one JSON array.
+"""Run every script in CHECK_SCRIPTS against every target in a file and print one JSON array.
 
-Runs scripts/01_robots_check.py, scripts/02_ping_check.py and scripts/03_security_txt_check.py.
+Each script takes one target as its only argument and prints one JSON row.
 
 usage: run_checks.py -f FILE [-o [PATH]]
 """
@@ -12,12 +12,12 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-SCRIPTS_DIR = Path(__file__).resolve().parent / "scripts"
-CHECKS = [
-    ("01-robots", "01_robots_check.py"),
-    ("02-ping", "02_ping_check.py"),
-    ("03-security-txt", "03_security_txt_check.py"),
+CHECK_SCRIPTS = [
+    "01_robots_check.py",
+    "02_ping_check.py",
+    "03_security_txt_check.py",
 ]
+SCRIPTS_DIR = Path(__file__).resolve().parent / "scripts"
 TIMEOUT = 30
 MAX_WORKERS = 8
 
@@ -38,8 +38,14 @@ def read_targets(path):
     return [line for line in lines if line and not line.startswith("#")]
 
 
-def run_check(name, script, target):
+def check_name(script):
+    """Check name for a script file: 01_robots_check.py -> 01-robots."""
+    return Path(script).stem.removesuffix("_check").replace("_", "-")
+
+
+def run_check(script, target):
     """Run one check script and return its JSON row, or an ERROR row on any failure."""
+    name = check_name(script)
     error_row = {"check": name, "target": target, "status": 0, "result": "ERROR"}
     try:
         proc = subprocess.run(
@@ -62,7 +68,7 @@ def run_check(name, script, target):
 
 def run_all(targets):
     """Every check for every target, ordered by target then check."""
-    jobs = [(name, script, target) for target in targets for name, script in CHECKS]
+    jobs = [(script, target) for target in targets for script in CHECK_SCRIPTS]
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         return list(pool.map(lambda job: run_check(*job), jobs))
 
@@ -78,7 +84,7 @@ def main():
         targets = read_targets(args.file)
     except OSError as e:
         sys.exit(f"error: cannot read {args.file}: {e.strerror}")
-    print(f"running {len(CHECKS)} checks on {len(targets)} targets", file=sys.stderr)
+    print(f"running {len(CHECK_SCRIPTS)} checks on {len(targets)} targets", file=sys.stderr)
     text = json.dumps(run_all(targets), indent=2)
     print(text)
     if args.output is not None:
