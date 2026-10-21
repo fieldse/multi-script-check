@@ -53,7 +53,7 @@ function main() {
   require_uv
   create_venv
   install_dependencies
-  echo "done. activate with: source ./activate.sh"
+  echo "setup complete: .venv is ready. Next: source ./activate.sh"
 }
 
 main "$@"

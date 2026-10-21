@@ -46,6 +46,7 @@ function main() {
     return 1
   fi
   source "$project_dir/.venv/bin/activate"
+  echo "activated: $VIRTUAL_ENV"
 }
 
 main "$@"
