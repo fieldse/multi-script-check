@@ -1,0 +1,4 @@
+# Targets for run_checks.py: one IP, host or URL per line
+example.com
+https://www.python.org
+127.0.0.1:1

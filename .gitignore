@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+*.results.json
+.vscode
+*.code-workspace
+.DS_Store
+node_modules
+.env
+.claude
