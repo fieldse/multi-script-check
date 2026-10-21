@@ -9,11 +9,11 @@ Each check sends one GET request to a fixed path. Nothing is crawled, submitted 
 ```
 ./setup.sh
 source ./activate.sh
-python3 run_checks.py -f urls.txt
+python3 run_checks.py -f urls.txt -o
 ```
 
 - **Result:** a JSON array with three rows (robots, ping, security.txt) for each site in `urls.txt`.
-- **Save it:** add `-o` to write `urls.results.json`.
+- **Saved to:** `urls.results.json`, as well as printed. Use `-o PATH` to pick the file name.
 
 ## Quick start
 
