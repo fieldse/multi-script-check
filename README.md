@@ -4,6 +4,17 @@ Runs basic, read-only checks against web hosts and prints the results as JSON.
 
 Each check sends one GET request to a fixed path. Nothing is crawled, submitted or modified.
 
+## TLDR
+
+```
+./setup.sh
+source ./activate.sh
+python3 run_checks.py -f urls.txt
+```
+
+- **Result:** a JSON array with three rows (robots, ping, security.txt) for each site in `urls.txt`.
+- **Save it:** add `-o` to write `urls.results.json`.
+
 ## Quick start
 
 1. `./setup.sh`
@@ -12,7 +23,7 @@ Each check sends one GET request to a fixed path. Nothing is crawled, submitted 
    - Safe to re-run.
 2. `source ./activate.sh`
    - Activates `.venv` in the current shell.
-3. `python run_checks.py -f urls.txt`
+3. `python3 run_checks.py -f urls.txt`
 
 - **Requirements:** Python 3 and `uv`.
 - **Dependencies:** none today. Standard library only, so there is no `requirements.txt`.
@@ -33,10 +44,10 @@ Each check sends one GET request to a fixed path. Nothing is crawled, submitted 
 `run_checks.py` runs the three scripts in the table above against every target in a file.
 
 ```
-python run_checks.py -f urls.txt
-python run_checks.py -f urls.txt -o
-python run_checks.py -f urls.txt -o results.json
-python run_checks.py -f urls.txt | jq '.[] | select(.result == "TRUE")'
+python3 run_checks.py -f urls.txt
+python3 run_checks.py -f urls.txt -o
+python3 run_checks.py -f urls.txt -o results.json
+python3 run_checks.py -f urls.txt | jq '.[] | select(.result == "TRUE")'
 ```
 
 | flag              | effect                                                                      |
@@ -59,9 +70,9 @@ python run_checks.py -f urls.txt | jq '.[] | select(.result == "TRUE")'
 ## Single check
 
 ```
-python scripts/01_robots_check.py <ip-or-url>
-python scripts/02_ping_check.py <ip-or-url>
-python scripts/03_security_txt_check.py <ip-or-url>
+python3 scripts/01_robots_check.py <ip-or-url>
+python3 scripts/02_ping_check.py <ip-or-url>
+python3 scripts/03_security_txt_check.py <ip-or-url>
 ```
 
 - **One argument:** an IP, a hostname, or a URL. No flags.
