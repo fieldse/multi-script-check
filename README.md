@@ -37,7 +37,8 @@ python3 run_checks.py -f urls.txt -o
 | `03-security-txt` | `scripts/03_security_txt_check.py` | `/.well-known/security.txt` | the host publishes a security.txt |
 
 - **02-ping:** an HTTP GET, not an ICMP ping.
-- **Shared logic:** all three import `scripts/probe.py`. Each script only sets its name and path.
+- **Standalone:** each script holds its own request and classification logic. They share no code and import only the standard library.
+- **What differs:** only the `CHECK` name and the `PATH` constants near the top of each file.
 
 ## Batch run
 
@@ -94,24 +95,17 @@ CHECK_SCRIPTS = [
 
 ### Add a new script
 
-1. Create the file in `scripts/`. This one checks `/sitemap.xml`:
-   ```python
-   #!/usr/bin/env python3
-   """Check whether a host serves /sitemap.xml and print one JSON row.
+1. Copy an existing script: `cp scripts/01_robots_check.py scripts/04_sitemap_check.py`
+2. Edit three things in the new file:
+   - The docstring: the description and the `usage:` line.
+   - `CHECK = "04-sitemap"`
+   - `PATH = "/sitemap.xml"`
+3. Test it alone: `python3 scripts/04_sitemap_check.py owasp.org`
+4. Add `"04_sitemap_check.py"` to `CHECK_SCRIPTS`.
+5. Run the batch.
 
-   usage: 04_sitemap_check.py <ip-or-url>
-   """
-   from probe import main
-
-   if __name__ == "__main__":
-       main("04-sitemap", "/sitemap.xml")
-   ```
-2. Test it alone: `python3 scripts/04_sitemap_check.py owasp.org`
-3. Add `"04_sitemap_check.py"` to `CHECK_SCRIPTS`.
-4. Run the batch.
-
-- **Probe-based:** `main(name, path)` from `probe.py` sends the GET request and prints the row.
-- **Name match:** the name passed to `main` should equal the name derived from the file name.
+- **Standalone:** each script holds all its own logic and imports only the standard library.
+- **Name match:** `CHECK` should equal the name derived from the file name.
   - The runner drops the `_check` ending and swaps `_` for `-`: `04_sitemap_check.py` becomes `04-sitemap`.
   - The runner uses the derived name when it has to write an `ERROR` row for a script that crashed.
 
@@ -120,7 +114,7 @@ CHECK_SCRIPTS = [
 - **Language:** Python. The runner starts each script with the same interpreter it runs under.
 - **Input:** one argument, the target (IP, host or URL).
 - **Output:** one JSON object on stdout, with the keys `check`, `target`, `status` and `result`.
-- **No probe.py needed:** a script that doesn't use `probe.py` works if it follows the contract.
+- **Anything else is free:** a script can make its own kind of request or use no HTTP at all, as long as it follows this contract.
 - **Failure:** a non-zero exit, a run past 30 seconds or output that isn't JSON becomes an `ERROR` row.
 
 ## Single check
@@ -165,5 +159,5 @@ python3 scripts/03_security_txt_check.py <ip-or-url>
 - **`setup.sh`:** creates `.venv` and installs dependencies.
 - **`activate.sh`:** activates `.venv`. Must be sourced.
 - **`run_checks.py`:** batch runner.
-- **`scripts/`:** the three checks and `probe.py`.
+- **`scripts/`:** the three standalone checks.
 - **`urls.txt`:** sample targets.
