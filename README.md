@@ -57,9 +57,7 @@ python3 run_checks.py -f urls.txt | jq '.[] | select(.result == "TRUE")'
 | `-o PATH`         | also saves the JSON to `PATH`                                               |
 
 - **What runs:** the files listed in `CHECK_SCRIPTS` at the top of `run_checks.py`, once per target.
-- **Default list:** `01_robots_check.py`, `02_ping_check.py` and `03_security_txt_check.py`.
-- **Your own script:** put it in `scripts/`, add its file name to `CHECK_SCRIPTS`.
-- **Script contract:** it takes one target as its only argument and prints one JSON row.
+- **Change the list:** see [Change the scripts](#change-the-scripts).
 - **How:** each script is a separate subprocess. The runner collects the row each one prints.
 - **Output:** one JSON array on stdout, with one row per check per target.
 - **Order:** input-file order, then `01`, `02`, `03` for each target.
@@ -69,6 +67,61 @@ python3 run_checks.py -f urls.txt | jq '.[] | select(.result == "TRUE")'
 - **Concurrency:** up to 8 checks run at once.
 - **Failures:** a check that exits non-zero, runs past 30 seconds or prints invalid JSON becomes an `ERROR` row. The rest of the batch carries on.
 - **Unreadable target file:** prints an error to stderr and exits 1.
+
+## Change the scripts
+
+`run_checks.py` runs the files named in `CHECK_SCRIPTS`, an array at the top of the file:
+
+```python
+CHECK_SCRIPTS = [
+    "01_robots_check.py",
+    "02_ping_check.py",
+    "03_security_txt_check.py",
+]
+```
+
+### Swap or remove a script
+
+1. Open `run_checks.py`.
+2. Edit the names in `CHECK_SCRIPTS`.
+   - Delete a name to stop running that script.
+   - Replace a name to run a different script in its place.
+3. Run `python3 run_checks.py -f urls.txt`.
+
+- **Location:** every name is a file in `scripts/`.
+- **Order:** rows come out in list order for each target.
+- **Count:** any number of scripts works. It is not fixed at three.
+
+### Add a new script
+
+1. Create the file in `scripts/`. This one checks `/sitemap.xml`:
+   ```python
+   #!/usr/bin/env python3
+   """Check whether a host serves /sitemap.xml and print one JSON row.
+
+   usage: 04_sitemap_check.py <ip-or-url>
+   """
+   from probe import main
+
+   if __name__ == "__main__":
+       main("04-sitemap", "/sitemap.xml")
+   ```
+2. Test it alone: `python3 scripts/04_sitemap_check.py owasp.org`
+3. Add `"04_sitemap_check.py"` to `CHECK_SCRIPTS`.
+4. Run the batch.
+
+- **Probe-based:** `main(name, path)` from `probe.py` sends the GET request and prints the row.
+- **Name match:** the name passed to `main` should equal the name derived from the file name.
+  - The runner drops the `_check` ending and swaps `_` for `-`: `04_sitemap_check.py` becomes `04-sitemap`.
+  - The runner uses the derived name when it has to write an `ERROR` row for a script that crashed.
+
+### Script contract
+
+- **Language:** Python. The runner starts each script with the same interpreter it runs under.
+- **Input:** one argument, the target (IP, host or URL).
+- **Output:** one JSON object on stdout, with the keys `check`, `target`, `status` and `result`.
+- **No probe.py needed:** a script that doesn't use `probe.py` works if it follows the contract.
+- **Failure:** a non-zero exit, a run past 30 seconds or output that isn't JSON becomes an `ERROR` row.
 
 ## Single check
 
